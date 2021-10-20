@@ -20,6 +20,6 @@ go build -o .tmp\linux\hubexport.exe .\cmd\hubexport
 
 
 echo Creating archive for version %*...
-7z a -tzip .\.dist\az-eventhub-tools--darwin-linux-amd64--%*.zip .\.tmp\linux\*.exe readme.md
+7z a -tzip .\.dist\az-eventhub-tools--linux-amd64--%*.zip .\.tmp\linux\*.exe readme.md
 
 echo All done!
