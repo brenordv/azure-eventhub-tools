@@ -73,7 +73,7 @@ func OnMsgReceived(_ context.Context, event *eventhub.Event) error {
 
 	if shouldSaveMessage(msg.MsgData) {
 		msg.SuggestedFilename = u.PutFileInSubFolderBasedOnTime(d.CurrentConfig.InboundConfig.InboundFolder,
-			fmt.Sprintf("%s.txt", event.ID), now)
+			fmt.Sprintf("%d.txt", event.SystemProperties.Offset), now)
 
 		err := DumpMessage(msg)
 		if err != nil {
