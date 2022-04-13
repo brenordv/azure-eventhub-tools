@@ -10,6 +10,7 @@ type Config struct {
 	BadgerConfig             BadgerConfig   `json:"badgerConfig"`
 	InboundConfig            InboundConfig  `json:"inboundConfig"`
 	OutboundConfig           OutboundConfig `json:"outboundConfig"`
+	PartitionIds             []string
 }
 
 type OutboundConfig struct {

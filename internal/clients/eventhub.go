@@ -27,21 +27,28 @@ func parseConnectionString(connectionString string, entityPath string) string {
 	return connectionString
 }
 
-// logRuntimeInfo will log the runtime information for each available partition.
+// extractRuntimeInfo will extract the partition ids and log the runtime information for each available partition, if
+// parameter alsoLog is true.
 // Will panic in case of failure.
 //
 // Parameters:
 //  hub: pointer to the eventhub.Hub object.
 //  ctx: Current context
+//  alsoLog: if true will fetch and log details about each partition.
 //
 // Returns:
-//  Nothing. Use the global variables.
-func logRuntimeInfo(hub *eventhub.Hub, ctx context.Context) {
+//  Slice of strings containing the PartitionIds available.
+func extractRuntimeInfo(hub *eventhub.Hub, ctx context.Context, alsoLog bool) []string {
 	info, e := hub.GetRuntimeInformation(ctx)
 	h.HandleError("Failed to get runtime information", e, false)
 
 	log.Printf("Runtime started at '%s', pointing at path '%s' with %d partitions. Available partitions: %s\n",
 		info.CreatedAt, info.Path, info.PartitionCount, info.PartitionIDs)
+
+	if !alsoLog {
+		return info.PartitionIDs
+	}
+
 	for _, p := range info.PartitionIDs {
 		pInfo, e := hub.GetPartitionInformation(ctx, p)
 		h.HandleError(fmt.Sprintf("Failed to get info for partition '%s'.", p), e, true)
@@ -54,6 +61,8 @@ func logRuntimeInfo(hub *eventhub.Hub, ctx context.Context) {
 			pInfo.LastEnqueuedOffset,
 			pInfo.LastEnqueuedTimeUtc.Format(time.RFC3339Nano))
 	}
+
+	return info.PartitionIDs
 }
 
 // GetEventHubClient instantiate an Eventhub.
@@ -72,9 +81,6 @@ func GetEventHubClient(connectionString string, entityPath string) (context.Cont
 	hub, err := eventhub.NewHubFromConnectionString(cs)
 	h.HandleError("Failed to create new EventHub client from connection string", err, true)
 
-	if !d.CurrentConfig.SkipGetRuntimeInfo {
-		logRuntimeInfo(hub, ctx)
-	}
-
+	d.CurrentConfig.PartitionIds = extractRuntimeInfo(hub, ctx, !d.CurrentConfig.SkipGetRuntimeInfo)
 	return ctx, hub
 }
