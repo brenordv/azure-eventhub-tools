@@ -50,40 +50,6 @@ func ReadFromEventHub() {
 	}
 }
 
-// startReadingPartition will start reading messages from eventhub for a specific partition.
-//
-// Parameters:
-//  hub: eventhub.Hub client that will be used.
-//  ctx: context in use.
-//  partitionId: partition id that will be used for reading messages.
-//  ch: channel used for controller code flow when reading from all partitions.
-//
-// Returns:
-//  Nothing
-func startReadingPartition(hub *eventhub.Hub, ctx context.Context, partitionId string, ch chan bool) {
-	var listenerHandler *eventhub.ListenerHandle
-	var err error
-	listenerHandler, err = hub.Receive(ctx, partitionId, OnMsgReceived, eventhub.ReceiveWithConsumerGroup(d.CurrentConfig.InboundConfig.ConsumerGroup))
-	h.HandleError("Failed to establish reading connection to EventHub.", err, true)
-
-	h.WatchForUserInterruption(func() {
-		if listenerHandler == nil {
-			return
-		}
-		lastErr := listenerHandler.Err()
-		h.HandleError("Failed to process received message.", lastErr, true)
-
-		err := listenerHandler.Close(ctx)
-		h.HandleError("Failed to close message listener.", err, true)
-
-		err = hub.Close(ctx)
-		h.HandleError("Failed to close eventhub client.", err, true)
-		if ch != nil {
-			ch <- true
-		}
-	})
-}
-
 // OnMsgReceived is the handler for received messages on eventhub.
 //
 // Parameters:
@@ -105,7 +71,7 @@ func OnMsgReceived(_ context.Context, event *eventhub.Event) error {
 	}
 	defer h.DelegateIgnoreError(pBar.Add, 1)
 
-	if d.CurrentConfig.InboundConfig.ReadToFile || d.CurrentConfig.InboundConfig.ContentHasFilterKeywords(msg.MsgData) {
+	if shouldSaveMessage(msg.MsgData) {
 		msg.SuggestedFilename = u.PutFileInSubFolderBasedOnTime(d.CurrentConfig.InboundConfig.InboundFolder,
 			fmt.Sprintf("%s.txt", event.ID), now)
 
@@ -162,4 +128,50 @@ func DumpMessage(m d.InboundMessage) error {
 
 	err = file.Sync()
 	return err
+}
+
+func shouldSaveMessage(md string) bool {
+	if !d.CurrentConfig.InboundConfig.ReadToFile {
+		return false
+	}
+
+	if d.CurrentConfig.InboundConfig.DumpFilter == nil {
+		return true
+	}
+
+	return d.CurrentConfig.InboundConfig.ContentHasFilterKeywords(md)
+}
+
+// startReadingPartition will start reading messages from eventhub for a specific partition.
+//
+// Parameters:
+//  hub: eventhub.Hub client that will be used.
+//  ctx: context in use.
+//  partitionId: partition id that will be used for reading messages.
+//  ch: channel used for controller code flow when reading from all partitions.
+//
+// Returns:
+//  Nothing
+func startReadingPartition(hub *eventhub.Hub, ctx context.Context, partitionId string, ch chan bool) {
+	var listenerHandler *eventhub.ListenerHandle
+	var err error
+	listenerHandler, err = hub.Receive(ctx, partitionId, OnMsgReceived, eventhub.ReceiveWithConsumerGroup(d.CurrentConfig.InboundConfig.ConsumerGroup))
+	h.HandleError("Failed to establish reading connection to EventHub.", err, true)
+
+	h.WatchForUserInterruption(func() {
+		if listenerHandler == nil {
+			return
+		}
+		lastErr := listenerHandler.Err()
+		h.HandleError("Failed to process received message.", lastErr, true)
+
+		err := listenerHandler.Close(ctx)
+		h.HandleError("Failed to close message listener.", err, true)
+
+		err = hub.Close(ctx)
+		h.HandleError("Failed to close eventhub client.", err, true)
+		if ch != nil {
+			ch <- true
+		}
+	})
 }

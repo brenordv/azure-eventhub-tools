@@ -41,6 +41,16 @@ Filename: %s
 	return str
 }
 
+// ContentHasFilterKeywords checks if the string c contains any of the filters used.
+//
+// Parameters:
+//  c: text to be checked.
+//
+// Receiver:
+//  Instance of InboundConfig
+//
+// Returns:
+//  true if c contains any of the filters informed or if there are no filters to use. false otherwise.
 func (ic *InboundConfig) ContentHasFilterKeywords(c string) bool {
 	if CurrentConfig.InboundConfig.DumpFilter == nil {
 		return false
