@@ -80,13 +80,28 @@ func MustGetFileStat(p string) os.FileInfo {
 	return fi
 }
 
-// TODO: add summary
+// IsFile checks if the string is a file or not.
+// Will panic on error.
+//
+// Parameters:
+//   p: target file
+//
+// Returns:
+//   true if p is a file. false if not.
 func IsFile(p string) bool {
 	fi := MustGetFileStat(p)
 	return !fi.IsDir()
 }
 
-// TODO: add summary
+// LoadRuntimeConfig loads the configuration file to memory
+// Will panic on error.
+//
+// Parameters:
+//   cfgFile: configuration file
+//   validator: function that will be used to validate the file for the current operation (read, send or export)
+//
+// Returns:
+//   none
 func LoadRuntimeConfig(cfgFile string, validator func()) {
 	if !Exists(cfgFile) {
 		h.HandleError(
