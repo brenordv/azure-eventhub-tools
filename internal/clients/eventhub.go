@@ -11,7 +11,15 @@ import (
 	"time"
 )
 
-// TODO: add summary
+// parseConnectionString parses connection string to make sure it will have the correct entityPath in it.
+// Will panic in case of failure.
+//
+// Parameters:
+//  connectionString: connection string that will be used to open a connection to Eventhub
+//  entityPath: Name of the entity path (eventhub) that will be targeted.
+//
+// Returns:
+//  Nothing. Use the global variables.
 func parseConnectionString(connectionString string, entityPath string) string {
 	if !strings.Contains(connectionString, ";EntityPath=") {
 		return fmt.Sprintf("%s;EntityPath=%s", connectionString, entityPath)
@@ -19,7 +27,15 @@ func parseConnectionString(connectionString string, entityPath string) string {
 	return connectionString
 }
 
-// TODO: add summary
+// logRuntimeInfo will log the runtime information for each available partition.
+// Will panic in case of failure.
+//
+// Parameters:
+//  hub: pointer to the eventhub.Hub object.
+//  ctx: Current context
+//
+// Returns:
+//  Nothing. Use the global variables.
 func logRuntimeInfo(hub *eventhub.Hub, ctx context.Context) {
 	info, e := hub.GetRuntimeInformation(ctx)
 	h.HandleError("Failed to get runtime information", e, false)
