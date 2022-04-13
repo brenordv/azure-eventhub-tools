@@ -22,7 +22,7 @@ var pBar *progressbar.ProgressBar
 
 func ReadFromEventHub() {
 	if d.CurrentConfig.InboundConfig.ReadToFile {
-		u.PrintReadAndSafeToDiskPerfWarning()
+		u.PrintReadAndSaveToDiskPerfWarning()
 	}
 
 	bar := progressbar.Default(-1, "Reading messages")
@@ -81,7 +81,7 @@ func OnMsgReceived(_ context.Context, event *eventhub.Event) error {
 	defer h.DelegateIgnoreError(pBar.Add, 1)
 
 	if d.CurrentConfig.InboundConfig.ReadToFile || d.CurrentConfig.InboundConfig.ContentHasFilterKeywords(msg.MsgData) {
-		msg.SuggestedFilename= u.PutFileInSubFolderBasedOnTime(d.CurrentConfig.InboundConfig.InboundFolder,
+		msg.SuggestedFilename = u.PutFileInSubFolderBasedOnTime(d.CurrentConfig.InboundConfig.InboundFolder,
 			fmt.Sprintf("%s.txt", event.ID), now)
 
 		err := DumpMessage(msg)

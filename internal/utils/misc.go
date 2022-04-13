@@ -12,7 +12,7 @@ func PrintHeader(toolName string) {
 	fmt.Printf("(v: %s)\n", d.Version)
 }
 
-// PrintReadAndSafeToDiskPerfWarning simply prints out a warning message if the user decides
+// PrintReadAndSaveToDiskPerfWarning simply prints out a warning message if the user decides
 // to read messages AND write them to disk at the same time.
 //
 // Parameters:
@@ -20,7 +20,7 @@ func PrintHeader(toolName string) {
 //
 // Returns:
 //  Nothing.
-func PrintReadAndSafeToDiskPerfWarning() {
+func PrintReadAndSaveToDiskPerfWarning() {
 	log.Println("----| WARNING | ----------------------------------")
 	log.Println("Reading to file drastically SLOWS things down.")
 	log.Println("--------------------------------------------------")
