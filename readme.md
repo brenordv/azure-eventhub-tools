@@ -206,7 +206,7 @@ Note that all paths that have default values are relative to the application loc
 
 ### InboundConfig Section
 1. **consumerGroup**: Required even if you want to use ```$Default```.
-2. **partitionId**: Optional with default of ```0```. Which partition will be used while reading messages.
+2. **partitionId**: Optional with default of ```0```. Which partition will be used while reading messages. Use ```-1``` if you want to read from ALL partitions at once. (Careful with this option. It's **very** resource intensive...)
 3. **inboundFolder**: Optional with default of ```.inbound```. This is where any messages read will be saved.
 4. **readToFile**: Optional with default of ```false```. If true, will save the message to disk as soon as it's read.
 5. **ignoreCheckpoint**: Optional with default of ```false```. If true, will process every available message every time the tool is executed. By default, every message will be processed only once.

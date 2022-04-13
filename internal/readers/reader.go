@@ -37,10 +37,32 @@ func ReadFromEventHub() {
 	pBar = bar
 
 	ctx, hub := c.GetEventHubClient(d.CurrentConfig.EventhubConnectionString, d.CurrentConfig.EntityPath)
-	var err error
-	var listenerHandler *eventhub.ListenerHandle
 	partitionId := strconv.Itoa(d.CurrentConfig.InboundConfig.PartitionId)
 
+	if partitionId != "-1" {
+		startReadingPartition(hub, ctx, partitionId, nil)
+	} else {
+		done := make(chan bool)
+		for _, pId := range d.CurrentConfig.PartitionIds {
+			go startReadingPartition(hub, ctx, pId, done)
+		}
+		<-done
+	}
+}
+
+// startReadingPartition will start reading messages from eventhub for a specific partition.
+//
+// Parameters:
+//  hub: eventhub.Hub client that will be used.
+//  ctx: context in use.
+//  partitionId: partition id that will be used for reading messages.
+//  ch: channel used for controller code flow when reading from all partitions.
+//
+// Returns:
+//  Nothing
+func startReadingPartition(hub *eventhub.Hub, ctx context.Context, partitionId string, ch chan bool) {
+	var listenerHandler *eventhub.ListenerHandle
+	var err error
 	listenerHandler, err = hub.Receive(ctx, partitionId, OnMsgReceived, eventhub.ReceiveWithConsumerGroup(d.CurrentConfig.InboundConfig.ConsumerGroup))
 	h.HandleError("Failed to establish reading connection to EventHub.", err, true)
 
@@ -56,6 +78,9 @@ func ReadFromEventHub() {
 
 		err = hub.Close(ctx)
 		h.HandleError("Failed to close eventhub client.", err, true)
+		if ch != nil {
+			ch <- true
+		}
 	})
 }
 
