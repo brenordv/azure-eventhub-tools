@@ -12,6 +12,7 @@ import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/schollz/progressbar/v3"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"time"
@@ -40,10 +41,13 @@ func ReadFromEventHub() {
 	partitionId := strconv.Itoa(d.CurrentConfig.InboundConfig.PartitionId)
 
 	if partitionId != "-1" {
+		log.Printf("Starting to read from partition '%s'...\n", partitionId)
 		startReadingPartition(hub, ctx, partitionId, nil)
 	} else {
 		done := make(chan bool)
+		log.Print("Starting multi-partition reading...")
 		for _, pId := range d.CurrentConfig.PartitionIds {
+			log.Printf("Starting to read from partition '%s'...\n", pId)
 			go startReadingPartition(hub, ctx, pId, done)
 		}
 		<-done
