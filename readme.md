@@ -43,6 +43,8 @@ By default, every exported message is saved under a sub-folder with the current 
 
 # Benchmark
 All benchmarks were made using about 500k messages of 7kb each.
+Note: All benchmarks were made using Windows with a HDD (ntfs). 
+When I tested using Linux + HDD (ext4) times were way better. 
 
 ## Hub Send
 1. Buffered: 765 messages/second (about 66 million messages/day)

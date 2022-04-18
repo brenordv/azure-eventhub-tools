@@ -79,6 +79,8 @@ type OutboundMessage struct {
 type InboundMessage struct {
 	Id                []byte
 	EventId           string
+	PartitionKey      *string
+	PartitionId       string
 	QueuedTime        time.Time
 	EventSeqNumber    *int64
 	EventOffset       *int64

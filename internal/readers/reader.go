@@ -54,6 +54,10 @@ func ReadFromEventHub() {
 	}
 }
 
+type inboundHandler struct {
+	partitionId string
+}
+
 // OnMsgReceived is the handler for received messages on eventhub.
 //
 // Parameters:
@@ -62,22 +66,27 @@ func ReadFromEventHub() {
 //
 // Returns:
 //  Nothing
-func OnMsgReceived(_ context.Context, event *eventhub.Event) error {
+func (i *inboundHandler) OnMsgReceived(_ context.Context, event *eventhub.Event) error {
+	//Copying value to avoid pointer conflicts.
+	evValue := *event
 	now := time.Now()
+
 	msg := d.InboundMessage{
-		Id:             []byte(event.ID),
-		EventId:        event.ID,
-		QueuedTime:     *event.SystemProperties.EnqueuedTime,
-		EventSeqNumber: event.SystemProperties.SequenceNumber,
-		EventOffset:    event.SystemProperties.Offset,
+		Id:             []byte(evValue.ID),
+		EventId:        evValue.ID,
+		PartitionKey:   evValue.PartitionKey,
+		PartitionId:    i.partitionId,
+		QueuedTime:     *evValue.SystemProperties.EnqueuedTime,
+		EventSeqNumber: evValue.SystemProperties.SequenceNumber,
+		EventOffset:    evValue.SystemProperties.Offset,
 		ProcessedAt:    now,
-		MsgData:        string(event.Data),
+		MsgData:        string(evValue.Data),
 	}
 	defer h.DelegateIgnoreError(pBar.Add, 1)
 
 	if shouldSaveMessage(msg.MsgData) {
 		msg.SuggestedFilename = u.PutFileInSubFolderBasedOnTime(d.CurrentConfig.InboundConfig.InboundFolder,
-			fmt.Sprintf("%d.txt", event.SystemProperties.Offset), now)
+			fmt.Sprintf("%d.txt", msg.EventOffset), now)
 
 		err := DumpMessage(msg)
 		if err != nil {
@@ -159,7 +168,12 @@ func shouldSaveMessage(md string) bool {
 func startReadingPartition(hub *eventhub.Hub, ctx context.Context, partitionId string, ch chan bool) {
 	var listenerHandler *eventhub.ListenerHandle
 	var err error
-	listenerHandler, err = hub.Receive(ctx, partitionId, OnMsgReceived, eventhub.ReceiveWithConsumerGroup(d.CurrentConfig.InboundConfig.ConsumerGroup))
+
+	handler := inboundHandler{
+		partitionId: partitionId,
+	}
+
+	listenerHandler, err = hub.Receive(ctx, partitionId, handler.OnMsgReceived, eventhub.ReceiveWithConsumerGroup(d.CurrentConfig.InboundConfig.ConsumerGroup))
 	h.HandleError("Failed to establish reading connection to EventHub.", err, true)
 
 	h.WatchForUserInterruption(func() {
