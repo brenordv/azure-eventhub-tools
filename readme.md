@@ -145,7 +145,8 @@ Note that all paths that have default values are relative to the application loc
     "outboundFolder": ".outbound",
     "buffered": false,
     "justSendBuffered": false,
-    "ignoreStatus": false
+    "ignoreStatus": false,    
+    "partitionKey": null
   }
 }
 ```
@@ -196,6 +197,18 @@ Note that all paths that have default values are relative to the application loc
 ```
 
 
+#### Sending each message only 1x, with a custom PartitionKey.
+```json
+{
+  "EventHubConnString": "<REQUIRED! NO DEFAULT!>",
+  "entityPath": "<REQUIRED! NO DEFAULT!>",
+  "outboundConfig": {
+    "outboundFolder": "c:\\messages_to_send",
+    "partitionKey": "my-partition-key"
+  }  
+} 
+```
+
 ## Understanding the config file.
 ### Root section
 1. **EventHubConnString**: This is required for **Hub Read** and **Hub Send**. It's the connection string that will be used to connect to EventHub
@@ -221,6 +234,7 @@ Note that all paths that have default values are relative to the application loc
 2. **buffered**: Optional with default of ```false```. If true, will buffer (save to database) all messages first and then send them.
 3. **justSendBuffered**: Optional with default of ```false```. If true, will skip buffering and just send the messages that were already saved to the buffer.
 4. **ignoreStatus**: Optional with default of ```false```. If true, will send every message again. By default, once a message is sent, **Hub Send** will not try to send it again.
+5. **partitionKey**: Optional with default of ```null```. If set, this information will be added to every message sent. Attention: If set, all messages will be sent using the same PartitionKey. 
 
 
 # Attention Mac users!

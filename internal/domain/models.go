@@ -14,10 +14,11 @@ type Config struct {
 }
 
 type OutboundConfig struct {
-	OutboundFolder   string `json:"outboundFolder"`
-	Buffered         bool   `json:"buffered"`
-	JustSendBuffered bool   `json:"justSendBuffered"`
-	IgnoreStatus     bool   `json:"ignoreStatus"`
+	OutboundFolder   string  `json:"outboundFolder"`
+	PartitionKey     *string `json:"partitionKey"`
+	Buffered         bool    `json:"buffered"`
+	JustSendBuffered bool    `json:"justSendBuffered"`
+	IgnoreStatus     bool    `json:"ignoreStatus"`
 }
 
 type InboundConfig struct {

@@ -50,12 +50,15 @@ func SendUnbuffered(t string) {
 
 		readQueue <- true
 		go func(f string, ch chan bool, bar *progressbar.ProgressBar, hub *eventhub.Hub,
-			ctx context.Context, db *badger.DB) {
+			ctx context.Context, db *badger.DB, pKey *string) {
 			defer h.DelegateIgnoreError(bar.Add, 1)
 			defer u.FreeSlotOnQueue(ch)
 			content := u.ReadTextFile(filename)
 			msg := b.BuildOutboundMessage(filename, content)
 			ev := eventhub.NewEventFromString(msg.Content)
+			if pKey != nil {
+				ev.PartitionKey = pKey
+			}
 			err := hub.Send(ctx, ev)
 
 			if err != nil {
@@ -68,7 +71,7 @@ func SendUnbuffered(t string) {
 				return txn.Set(msg.Id, p.SerializeOutboundMessage(&msg))
 			})
 			h.HandleError(fmt.Sprintf("Failed to buffer file '%s'.", f), dbErr, true)
-		}(filename, readQueue, bar, hub, ctx, db)
+		}(filename, readQueue, bar, hub, ctx, db, d.CurrentConfig.OutboundConfig.PartitionKey)
 
 		count++
 		return nil
