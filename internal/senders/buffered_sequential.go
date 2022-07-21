@@ -23,7 +23,6 @@ func SendBuffered(t string) {
 	sendMessagesSequentially()
 }
 
-
 // TODO: add summary
 func sendMessagesSequentially() {
 	bar := progressbar.Default(-1, "Sending buffered messages")
@@ -53,11 +52,14 @@ func sendMessagesSequentially() {
 				}
 
 				go func(m *d.OutboundMessage, ctx context.Context, hub *eventhub.Hub, db *badger.DB,
-					wg *sync.WaitGroup, bar *progressbar.ProgressBar) {
+					wg *sync.WaitGroup, bar *progressbar.ProgressBar, pKey *string) {
 					wg.Add(1)
 					defer wg.Done()
 					defer h.DelegateIgnoreError(bar.Add, 1)
 					ev := eventhub.NewEventFromString(m.Content)
+					if pKey != nil {
+						ev.PartitionKey = pKey
+					}
 					err := hub.Send(ctx, ev)
 
 					dbErr := db.Update(func(txn *badger.Txn) error {
@@ -70,7 +72,7 @@ func sendMessagesSequentially() {
 					})
 					h.HandleError(fmt.Sprintf("Failed to update message for file '%s'", m.FullFilename), dbErr, false)
 					h.HandleError(fmt.Sprintf("Failed to send event for file '%s'", m.FullFilename), err, true)
-				}(msg, ctx, hub, db, &wg, bar)
+				}(msg, ctx, hub, db, &wg, bar, d.CurrentConfig.OutboundConfig.PartitionKey)
 
 				return nil
 			})
