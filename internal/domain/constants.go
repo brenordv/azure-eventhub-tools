@@ -1,7 +1,7 @@
 package domain
 
 const (
-	Version                       = "2.0.4"
+	Version                       = "2.0.4.RC"
 	AppDataFolder                 = ".app-data"
 	ConfigsFolder                 = ".configs"
 	OutboundFolder                = ".outbound"
