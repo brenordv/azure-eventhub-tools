@@ -1,3 +1,6 @@
+# Attention
+I have re-created this tool using Rust, and it is here: https://github.com/brenordv/rusted-toolbox
+
 # Azure EventHub Tools
 This repo has a couple of tools to interact with Azure EventHub and was created because I
 needed to stress test a couple of systems in the project I'm currently working on.
